@@ -30,4 +30,19 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+
+  @keyframes wave {
+    0%,
+    100% {
+      transform: scaleY(0.5);
+    }
+    50% {
+      transform: scaleY(1.1);
+    }
+  }
+  
+  /* Utility classes for the animation */
+  .animate-wave {
+    animation: wave 1s infinite ease-in-out;
+  }
 }
