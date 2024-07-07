@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+
+import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { Inter } from "next/font/google";
@@ -21,6 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         {children}
+        {process.env.NODE_ENV === "production" && <Analytics />}
         {process.env.NODE_ENV === "production" && <SpeedInsights />}
       </body>
     </html>
