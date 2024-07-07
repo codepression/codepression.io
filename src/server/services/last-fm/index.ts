@@ -20,6 +20,7 @@ async function getUserInfo() {
   const result = await fetch(url, {
     method: "GET",
     headers: DEFAULT_HEADERS,
+    next: { revalidate: 30 }
   });
   const json = await result.json();
   return json;
@@ -34,6 +35,7 @@ async function getRecentTracks() {
   const result = await fetch(url, {
     method: "GET",
     headers: DEFAULT_HEADERS,
+    next: { revalidate: 30 }
   });
   const json = await result.json();
   return json;
@@ -48,6 +50,7 @@ async function getTopTracks() {
   const result = await fetch(url, {
     method: "GET",
     headers: DEFAULT_HEADERS,
+    next: { revalidate: 30 }
   });
   const json = await result.json();
   return json;

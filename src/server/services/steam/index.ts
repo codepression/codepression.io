@@ -54,6 +54,7 @@ async function GetRecentlyPlayedGames() {
   });
   const result = await fetch(url, {
     method: "GET",
+    next: { revalidate: 30 }
   });
   const json = await result.json();
   return json;
@@ -66,11 +67,10 @@ async function GetUserStatsForGame(appid: string | number) {
     version: "v0002",
     query: [["appid", String(appid)]],
   });
-  console.log("url: ", url);
   const result = await fetch(url, {
     method: "GET",
+    next: { revalidate: 30 }
   });
-  console.log("result: ", result);
   const json = await result.json();
   return json;
 }
@@ -85,6 +85,7 @@ async function GetOwnedGames(appids?: (string | number)[]) {
   });
   const result = await fetch(url, {
     method: "GET",
+    next: { revalidate: 30 }
   });
   const json = await result.json();
   return json;
@@ -99,6 +100,7 @@ async function GetPlayerSummaries() {
   });
   const result = await fetch(url, {
     method: "GET",
+    next: { revalidate: 30 }
   });
   const json = await result.json();
   return json;
