@@ -1,22 +1,84 @@
-import Image from "next/image";
+import { formatRelative } from "date-fns/formatRelative";
+import { enGB } from "date-fns/locale";
 
 import LastFmService from "@/server/services/last-fm";
 import SteamService from "@/server/services/steam";
+import VRChatService from "@/server/services/vrchat";
+
+import { Container } from "./_components/container";
+import { Feed, type FeedItem } from "./_components/feed";
+import Hero from "./_components/hero";
+
+async function VrchatAuditLog() {
+  const bansResult = await VRChatService.getGroupAuditLog(
+    "grp_d5cab3a0-e22f-45db-9d17-4dfb11daede7",
+    { "group.user.ban": true }
+  );
+  const bansSet = new Set(bansResult.data?.results?.map((log) => log.targetId));
+
+  const kicksResult = await VRChatService.getGroupAuditLog(
+    "grp_d5cab3a0-e22f-45db-9d17-4dfb11daede7",
+    { "group.instance.kick": true }
+  );
+
+  const bans = bansResult.data?.results?.slice(0, 10);
+  const kicks = kicksResult.data?.results
+    ?.filter((log) => !bansSet.has(log.targetId))
+    .slice(0, 10);
+
+  return (
+    <div>
+      <p className="mb-2">audit logs</p>
+
+      <div className="grid grid-cols-2 gap-x-4">
+        {bans && (
+          <ul>
+            {bans.map((log) => (
+              <li key={log.id} className="flex flex-col">
+                <div className="text-white font-semibold">
+                  {log.description}
+                </div>
+                <div className=" text-neutral-200 text-sm">
+                  {formatRelative(log.created_at!, new Date(), {
+                    locale: enGB,
+                  })}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {kicks && (
+          <ul>
+            {kicks.map((log) => (
+              <li key={log.id} className="flex flex-col">
+                <div className="text-white font-semibold">
+                  {log.description}
+                </div>
+                <div className=" text-neutral-200 text-sm">
+                  {formatRelative(log.created_at!, new Date(), {
+                    locale: enGB,
+                  })}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
 
 async function VrchatPlayTime() {
   const ownedGames = await SteamService.GetOwnedGames(["438100"]);
-
-  const playerSummaries = await SteamService.GetPlayerSummaries()
+  // const user = await VRChatService.getFriend(
+  //   "usr_d20d390d-a41c-4129-87a7-a84984550ba7"
+  // );
 
   const playtime_forver: number = ownedGames.response.games[0].playtime_forever;
-  const playtime_2weeks: number = ownedGames.response.games[0].playtime_2weeks;
-
-  const playerSummary = playerSummaries.response.players[0]
-
-  console.log(JSON.stringify(playerSummary, null, 2))
 
   return (
-    <div className="space-y-2 text-neutral-300">
+    <>
       <p>
         i have wasted a total of{" "}
         <span className="text-white font-bold">
@@ -33,20 +95,20 @@ async function VrchatPlayTime() {
           )}
         </span>{" "}
         hours.
+        {/* {user.data?.state === "online" && (
+          <>
+            <br />
+            i&apos;m actually wasting my life away in vrchat,{" "}
+            <span className="relative text-white font-bold">
+              <span className="absolute top-1 -right-2 w-3 h-3 rounded-full bg-red-600 animate-ping" />
+              <span className="absolute top-1 -right-2 w-3 h-3 rounded-full bg-red-600 animate-ping [animation-delay:-.33s]" />
+              right now
+            </span>
+            .
+          </>
+        )} */}
       </p>
-      <p>
-        in the past two weeks i have wasted{" "}
-        <span className="text-white font-bold">
-          {Intl.NumberFormat("da-DK").format(playtime_2weeks * 60)}
-        </span>{" "}
-        seconds of my life on vrchat.
-      </p>
-      {playerSummary.gameid == "438100" && (
-        <p>
-          i&apos;m actually wasting my life away in vrchat, <span className="animate-pulse text-white font-bold">right now</span>.
-        </p>
-      )}
-    </div>
+    </>
   );
 }
 
@@ -55,84 +117,22 @@ async function RecentTracks() {
 
   const tracks: any[] = recentTracks.recenttracks.track.slice(0, 10);
 
-  // console.log(tracks[0]);
+  const items: FeedItem[] = tracks.map((track) => ({
+    type: "recent-track",
+    nowplaying: track["@attr"]?.nowplaying == "true",
 
-  return (
-    <div>
-      <div className="flow-root">
-        <ul role="list" className="-mb-8">
-          {tracks.map((track, trackIdx) => (
-            <li key={[track.name, track.artist.name].join("-")}>
-              <div className="relative pb-4">
-                {trackIdx !== tracks.length - 1 ? (
-                  <span
-                    aria-hidden="true"
-                    className="absolute left-6 top-4 -ml-px h-full w-0.5 bg-gray-200"
-                  />
-                ) : null}
-                <div
-                  className={
-                    track["@attr"]?.nowplaying == "true"
-                      ? "relative flex items-center space-x-3 bg-white/25"
-                      : "relative flex items-center space-x-3"
-                  }
-                  // className="relative flex items-center space-x-3"
-                >
-                  <div>
-                    <a
-                      href={track.url}
-                      rel="noopener noreferer"
-                      target="_blank"
-                      className="flex h-12 w-12 items-center justify-center rounded-full"
-                    >
-                      {/* <event.icon
-                        aria-hidden="true"
-                        className="h-5 w-5 text-white"
-                      /> */}
-                      <Image
-                        className="h-12 w-12"
-                        height={300}
-                        width={300}
-                        alt={""}
-                        src={String(track.image[3]["#text"])}
-                      />
-                    </a>
-                  </div>
-                  <div className="flex min-w-0 flex-1 justify-between space-x-4">
-                    <div className="flex flex-col text-sm">
-                      <a
-                        href={track.url}
-                        rel="noopener noreferer"
-                        target="_blank"
-                        className="text-white font-semibold hover:underline"
-                      >
-                        {track.name}
-                      </a>
-                      <a
-                        href={track.artist.url}
-                        className="text-neutral-200 hover:underline"
-                      >
-                        {track.artist.name}
-                      </a>
-                    </div>
-                    {track["@attr"]?.nowplaying == "true" && (
-                      <div className="flex items-center">
-                        <div className="flex h-full items-center justify-center mr-2">
-                          <div className="animate-wave mx-0.5 h-3 w-1 rounded bg-white [animation-delay:-0.4s]"></div>
-                          <div className="animate-wave mx-0.5 h-4 w-1 rounded bg-white [animation-delay:-0.2s]"></div>
-                          <div className="animate-wave mx-0.5 h-5 w-1 rounded bg-white"></div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
+    id: [track.name, track.artist.name].join("-"),
+
+    artist: track.artist.name,
+    artistHref: track.artist.url,
+
+    song: track.name,
+    songHref: track.url,
+
+    image: track.image[3]["#text"],
+  }));
+
+  return <Feed items={items} />;
 }
 
 async function TopTracks() {
@@ -140,80 +140,38 @@ async function TopTracks() {
 
   const tracks: any[] = topTracks.toptracks.track.slice(0, 10);
 
-  return (
-    <div>
-      <div className="flow-root">
-        <ul role="list" className="-mb-8">
-          {tracks.map((track, trackIdx) => (
-            <li key={[track.name, track.artist.name].join("-")}>
-              <div className="relative pb-4">
-                {trackIdx !== tracks.length - 1 ? (
-                  <span
-                    aria-hidden="true"
-                    className="absolute left-6 top-4 -ml-px h-full w-0.5 bg-gray-200"
-                  />
-                ) : null}
-                <div className="relative flex items-center space-x-3">
-                  <div>
-                    <a
-                      href={track.url}
-                      rel="noopener noreferer"
-                      target="_blank"
-                      className="flex h-12 w-12 items-center justify-center rounded-full"
-                    >
-                      {/* <event.icon
-                        aria-hidden="true"
-                        className="h-5 w-5 text-white"
-                      /> */}
-                      <Image
-                        className="aspect-square h-12 w-12"
-                        height={300}
-                        width={300}
-                        alt={""}
-                        src={String(track.image[3]["#text"])}
-                      />
-                    </a>
-                  </div>
-                  <div className="flex min-w-0 flex-1 justify-between space-x-4">
-                    <div className="flex flex-col text-sm">
-                      <a
-                        href={track.url}
-                        rel="noopener noreferer"
-                        target="_blank"
-                        className="text-white font-semibold hover:underline"
-                      >
-                        {track.name}
-                      </a>
-                      <a
-                        href={track.artist.url}
-                        className="text-neutral-200 hover:underline"
-                      >
-                        {track.artist.name}
-                      </a>
-                    </div>
-                    <div className="flex items-center text-sm font-semibold text-white">
-                      {track.playcount}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
+  const items: FeedItem[] = tracks.map((track) => ({
+    type: "top-track",
+    count: track.playcount,
+
+    id: [track.name, track.artist.name].join("-"),
+
+    artist: track.artist.name,
+    artistHref: track.artist.url,
+
+    song: track.name,
+    songHref: track.url,
+
+    image: track.image[3]["#text"],
+  }));
+
+  return <Feed items={items} />;
 }
 
 async function Music() {
   return (
-    <div className="space-y-4 divide-y text-neutral-300">
-      <div className="grid grid-cols-2 gap-4">
-        <p>the most recent stuff i&apos;ve listened to</p>
-        <p>these are my top tracks for the past 7 days</p>
-      </div>
-      <div className="grid grid-cols-2 gap-4 pt-4">
+    <div className="grid grid-cols-2 gap-8 text-neutral-300">
+      <div>
+        <h3 className="text-2xl font-bold tracking-tight mb-6 leading-6 text-white">
+          the most recent stuff i&apos;ve listened to
+        </h3>
         <RecentTracks />
+      </div>
+
+      <div>
+        <h3 className="text-2xl font-bold tracking-tight mb-6 leading-6 text-white">
+          these are my top tracks for the past 7 days
+        </h3>
         <TopTracks />
       </div>
     </div>
@@ -222,14 +180,14 @@ async function Music() {
 
 export default async function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center">
-      <div className="flex flex-col gap-y-8 text-lg">
-        <h1 className="text-4xl">
-          it&apos;s me, it&apos;s your boy, it&apos;s kodeh
-        </h1>
-        <VrchatPlayTime />
+    <>
+      <Hero
+        title="it's me, it's your boy, it's kodeh"
+        content={<VrchatPlayTime />}
+      />
+      <Container>
         <Music />
-      </div>
-    </main>
+      </Container>
+    </>
   );
 }

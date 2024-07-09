@@ -1,5 +1,4 @@
-const API_KEY = String(process.env.STEAM_API_KEY);
-const STEAM_ID = String(process.env.STEAM_ID);
+import { env } from "@/utils/env/server";
 
 type GetRecentlyPlayedGames = {
   service: "IPlayerService";
@@ -36,7 +35,7 @@ type CreateUrlProps = {
 
 function createUrl({ service, method, version, query }: CreateUrlProps) {
   const url = new URL(
-    `https://api.steampowered.com/${service}/${method}/${version}/?key=${API_KEY}&steamid=${STEAM_ID}&format=json`
+    `https://api.steampowered.com/${service}/${method}/${version}/?key=${env.STEAM_API_KEY}&steamid=${env.STEAM_ID}&format=json`
   );
 
   if (query) {
@@ -54,7 +53,7 @@ async function GetRecentlyPlayedGames() {
   });
   const result = await fetch(url, {
     method: "GET",
-    next: { revalidate: 30 }
+    next: { revalidate: 30 },
   });
   const json = await result.json();
   return json;
@@ -69,7 +68,7 @@ async function GetUserStatsForGame(appid: string | number) {
   });
   const result = await fetch(url, {
     method: "GET",
-    next: { revalidate: 30 }
+    next: { revalidate: 30 },
   });
   const json = await result.json();
   return json;
@@ -85,7 +84,7 @@ async function GetOwnedGames(appids?: (string | number)[]) {
   });
   const result = await fetch(url, {
     method: "GET",
-    next: { revalidate: 30 }
+    next: { revalidate: 30 },
   });
   const json = await result.json();
   return json;
@@ -94,13 +93,13 @@ async function GetOwnedGames(appids?: (string | number)[]) {
 async function GetPlayerSummaries() {
   const url = createUrl({
     service: "ISteamUser",
-    method:"GetPlayerSummaries",
+    method: "GetPlayerSummaries",
     version: "v0002",
-    query: [["steamids", STEAM_ID]]
+    query: [["steamids", env.STEAM_ID]],
   });
   const result = await fetch(url, {
     method: "GET",
-    next: { revalidate: 30 }
+    next: { revalidate: 30 },
   });
   const json = await result.json();
   return json;

@@ -1,5 +1,4 @@
-const API_URL = "https://ws.audioscrobbler.com/2.0";
-const API_KEY = String(process.env.LASTFM_API_KEY);
+import { env } from "@/utils/env/server";
 
 const DEFAULT_HEADERS = {
   "User-Agent": "Codepression <hello@codepression.io>",
@@ -7,7 +6,7 @@ const DEFAULT_HEADERS = {
 
 function createUrl(method: string, query?: [string, string][]) {
   const url = new URL(
-    `${API_URL}/?method=${method}&api_key=${API_KEY}&format=json`
+    `https://ws.audioscrobbler.com/2.0/?method=${method}&api_key=${env.LASTFM_API_KEY}&format=json`
   );
   if (query && query.length > 0) {
     query.forEach(([key, value]) => url.searchParams.set(key, value));
@@ -20,7 +19,7 @@ async function getUserInfo() {
   const result = await fetch(url, {
     method: "GET",
     headers: DEFAULT_HEADERS,
-    next: { revalidate: 30 }
+    next: { revalidate: 30 },
   });
   const json = await result.json();
   return json;
@@ -35,7 +34,7 @@ async function getRecentTracks() {
   const result = await fetch(url, {
     method: "GET",
     headers: DEFAULT_HEADERS,
-    next: { revalidate: 30 }
+    next: { revalidate: 30 },
   });
   const json = await result.json();
   return json;
@@ -50,7 +49,7 @@ async function getTopTracks() {
   const result = await fetch(url, {
     method: "GET",
     headers: DEFAULT_HEADERS,
-    next: { revalidate: 30 }
+    next: { revalidate: 30 },
   });
   const json = await result.json();
   return json;
@@ -59,7 +58,7 @@ async function getTopTracks() {
 const LastFmService = {
   getUserInfo,
   getRecentTracks,
-  getTopTracks
+  getTopTracks,
 };
 
 export default LastFmService;
